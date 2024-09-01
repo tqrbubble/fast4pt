@@ -345,6 +345,7 @@
         async function sendMessage() {
             const userInput = document.getElementById('userInput');
             const messageText = userInput.value.trim();
+            userInput.value = '';
             if (!messageText) return;
 
             if (messageText.startsWith('/')) {
@@ -408,7 +409,6 @@
                 } else {
                     showOverlay('Unknown command.');
                 }
-                userInput.value = '';
                 return;
             }
 
