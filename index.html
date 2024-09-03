@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interface</title>
+    <title>Fast4PT</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -206,7 +206,8 @@
             { command: '/help', description: 'Show available commands' },
             { command: '/renamechat <new_chatname>', description: 'Rename the current chat' },
             { command: '/setmodel <new_model>', description: 'Set a new model for responses' },
-            { command: '/about', description: 'Get a summary of the chat history' }
+            { command: '/about', description: 'Get a summary of the chat history' },
+            { command: '/clearall', description: 'Clear all local storage and reload the page' }
         ];
         let startTime = 0;
         let totalTokens = 0;
@@ -359,6 +360,19 @@
                     showOverlay(`Model set to '${model}'.`);
                 } else if (messageText === '/about') {
                     await summarizeChat();
+                } else if (messageText === '/clearall') {
+                    if (confirm('Warning: This will delete all chat history and settings. Are you sure you want to clear all local storage and reload the page?')) {
+                        if (confirm('Last chance to cancel. Are you really sure?')) {
+                            chats = {};
+                            document.getElementById('messages').innerHTML = '';
+                            localStorage.clear();
+                            window.location.reload();
+                        } else {
+                            addMessage('assistant', 'Clear all cancelled.');
+                        }
+                    } else {
+                        addMessage('assistant', 'Clear all cancelled.');
+                    }
                 } else {
                     showOverlay('Unknown command.');
                 }
@@ -394,7 +408,9 @@
                     const decoder = new TextDecoder();
                     let responseText = '';
                     const assistantTextDiv = document.createElement('div');
-                    assistantTextDiv.classList.add('text');
+                    const textDiv = document.createElement('div');
+                    textDiv.classList.add('text');
+                    assistantTextDiv.appendChild(textDiv);
                     document.getElementById('messages').appendChild(assistantTextDiv);
 
                     while (true) {
@@ -414,7 +430,7 @@
                                 const json = JSON.parse(data);
                                 if (json.choices && json.choices[0] && json.choices[0].delta) {
                                     const content = json.choices[0].delta.content || '';
-                                    assistantTextDiv.textContent += content.replace(/\n/g, '\n').replace(/\t/g, '    ');
+                                    textDiv.textContent += content.replace(/\n/g, '\n').replace(/\t/g, '    ');
                                     totalTokens += content.split(/\s+/).length;
                                 }
                             } catch (e) {
@@ -438,7 +454,7 @@
                             const json = JSON.parse(data);
                             if (json.choices && json.choices[0] && json.choices[0].delta) {
                                 const content = json.choices[0].delta.content || '';
-                                assistantTextDiv.textContent += content.replace(/\n/g, '\n').replace(/\t/g, '    ');
+                                textDiv.textContent += content.replace(/\n/g, '\n').replace(/\t/g, '    ');
                                 totalTokens += content.split(/\s+/).length;
                             }
                         } catch (e) {
@@ -501,7 +517,7 @@
             }, 0);
         });
     
-         function loadChatsFromLocalStorage() {
+        function loadChatsFromLocalStorage() {
             const storedChats = localStorage.getItem('chats');
             if (storedChats) {
                 chats = JSON.parse(storedChats);
